@@ -1,4 +1,4 @@
-function Model(Schema){
+function article(Schema){
 	return {
 		title: String,
 	    author: String,
@@ -7,4 +7,4 @@ function Model(Schema){
 	}
 }
 
-export default Model;
+export default article;

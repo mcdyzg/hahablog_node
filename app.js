@@ -2,16 +2,27 @@ import Koa from 'koa'
 // import render from './lib/render'
 import router from 'koa-router'
 import path from 'path'
-import bodyParer from 'koa-bodyparser';
+import bodyParer from 'koa-bodyparser'
 import cors from 'koa-cors'
+import session from 'koa-session-minimal'
+import redisStore from 'koa-redis'
+import convert from 'koa-convert'
 
-import Routes from './routes'
 import controllers from './controllers';
-// import models from './models';
+import models from './models';
 import config from './config';
 import util from './lib/util'
-const myRouter = router();
+
+
 const app = new Koa();
+app.keys = ['keys', 'keykeys'];
+app.use(session({
+  store: redisStore(),
+  cookie: ctx => ({
+    maxAge: 24 * 60 * 60 * 1000
+  })
+}));
+const myRouter = router();
 
 
 /**
@@ -45,17 +56,12 @@ global.U = util;
 
 
 //===================初始化model
-// models()
+models()
 
 
 
 //===================初始化控制器
-controllers()
-
-
-
-//===================初始化routes
-Routes(myRouter)
+controllers(myRouter)
 
 
 
@@ -72,7 +78,7 @@ app.use(cors())
 //===================初始化router
 app.use(myRouter.routes())
 
-log('11111111111')
+log('222222222')
 
 
 

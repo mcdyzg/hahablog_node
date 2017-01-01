@@ -1,5 +1,5 @@
 import router from 'koa-router'
-import auth from '../controllers/article'
+import auth from '../controllers/auth'
 const myRouter = router();
 
 const routes = app =>{

@@ -1,28 +1,22 @@
 import Koa from 'koa'
 // import render from './lib/render'
-import router from 'koa-router'
 import path from 'path'
 import bodyParer from 'koa-bodyparser'
 import cors from 'koa-cors'
 import session from 'koa-session-minimal'
-import redisStore from 'koa-redis'
+// import redisStore from 'koa-redis'
+import mongoStore from 'koa-generic-session-mongo'
 import convert from 'koa-convert'
 
-import controllers from './controllers';
 import models from './models';
 import config from './config';
+import routes from './routes';
 import util from './lib/util'
 
 
 const app = new Koa();
-app.keys = ['keys', 'keykeys'];
-app.use(session({
-  store: redisStore(),
-  cookie: ctx => ({
-    maxAge: 24 * 60 * 60 * 1000
-  })
-}));
-const myRouter = router();
+
+
 
 
 /**
@@ -55,13 +49,23 @@ global.U = util;
 
 
 
+
+//===================session初始化
+app.keys = ['keys', 'keykeys'];
+app.use(session({
+  store: new mongoStore({
+    url:'mongodb://hahablog:ljh123456@localhost:27017/hahablog'
+  }),
+  // 设置cookie和session保存时间,如果不设置，那么cookie maxAge = 0，session = 一天
+  // cookie: ctx => ({
+  //   maxAge: 24 * 60 * 60 * 1000
+  // })
+}));
+
+
+
 //===================初始化model
 models()
-
-
-
-//===================初始化控制器
-controllers(myRouter)
 
 
 
@@ -71,12 +75,15 @@ app.use(bodyParer())
 
 
 //===================设置允许跨域
-app.use(cors())
+app.use(cors({
+    // 设置允许传递cookie
+    credentials:true
+}))
 
 
 
 //===================初始化router
-app.use(myRouter.routes())
+routes(app)
 
 log('222222222')
 

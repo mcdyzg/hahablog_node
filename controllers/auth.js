@@ -1,17 +1,46 @@
 
 // 登录
 const signin = async (ctx,next)=>{
+	if(!ctx.request.body.name || !ctx.request.body.pwd){
+		log('用户名或密码不正确')
+		ctx.body = {
+			status:'error',
+			msg:'用户名或密码不正确',
+		}
+		return;
+	}
 
 	// 查找用户名，如果不存在报错
 	await M.user.find({name:ctx.request.body.name,pwd:ctx.request.body.pwd})
 	.then((obj)=>{
-		log(obj)
+		if(obj.length !== 0){
+			log('用户登录成功')
+			ctx.body = {
+				status:'success',
+				msg:'登录成功',
+				data:{
+					name:ctx.request.body.name,
+				},
+			}
+			ctx.session = {
+				name:ctx.request.body.name,
+				pwd:ctx.request.body.pwd,
+				status: 'hasLogin'
+			}
+		}else{
+			log('用户名或密码不正确')
+			ctx.body = {
+				status:'error',
+				msg:'用户名或密码不正确',
+			}
+		}
 		return
-		// if(obj.length !== 0){
-
-		// }
 	},(err)=>{
 		log(err)
+		ctx.body = {
+			status:'error',
+			msg:'服务器错误',
+		}
 		return
 	})
 }

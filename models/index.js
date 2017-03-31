@@ -1,12 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import mongoose from 'mongoose';
+import { db } from '../config'
+
 mongoose.Promise = global.Promise;
 const Schema = mongoose.Schema;
-
-
+mongoose.connect(db);
 function eachFiles() {
-	mongoose.connect(C.db);
     fs.readdirSync(C.models).forEach(function (name) {
     	let temName = path.basename(name,'.js');
       	if (path.extname(name) !== '' && name!=='index.js') {

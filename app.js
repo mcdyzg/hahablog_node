@@ -4,9 +4,10 @@ import path from 'path'
 import bodyParer from 'koa-bodyparser'
 import cors from 'koa-cors'
 import session from 'koa-session-minimal'
-// import redisStore from 'koa-redis'
+import serve from 'koa-static'
 import mongoStore from 'koa-generic-session-mongo'
 import convert from 'koa-convert'
+import views from 'koa-views'
 
 import models from './models';
 import config from './config';
@@ -50,11 +51,27 @@ global.U = util;
 
 
 
+//===================渲染页面
+app.use(views(__dirname + '/views', {
+  map: {
+    html: 'lodash'
+  }
+}));
+
+
+
+
+//===================初始化静态资源
+app.use(serve('static'));
+
+
+
+
 //===================session初始化
 app.keys = ['keys', 'keykeys'];
 app.use(session({
   store: new mongoStore({
-    url:'mongodb://hahablog:ljh123456@localhost:27017/hahablog'
+    url:C.db
   }),
   // 设置cookie和session保存时间,如果不设置，那么cookie maxAge = 0，session = 一天
   // cookie: ctx => ({
@@ -89,4 +106,4 @@ log('222222222')
 
 
 
-app.listen(3000)
+app.listen(3002)

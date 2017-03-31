@@ -3,7 +3,9 @@ function article(Schema){
 		title: String,
 	    author: String,
 	    category: String,
-	    introduction: String
+	    introduction: String,
+	    content:String,
+	    date:Date,
 	}
 }
 

@@ -1,6 +1,7 @@
 function category(Schema){
 	return {
 		category: String,
+		author:String,
 	}
 }
 

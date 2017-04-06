@@ -1,22 +1,11 @@
-
+import {getResponse} from '../helpers'
 
 const addCategory = async (ctx,next)=>{
-
-	if(!ctx.session.name) {
-		ctx.body = {
-			status:'userNotLogin',
-			msg:'用户未登录',
-		}
-		return;
-	}
 
 	// 如果分类名称未填写返回错误
 	if( !ctx.request.body.category) {
 		log('分类名称未填写')
-		ctx.body = {
-			status:'error',
-			msg:'分类名称未填写',
-		}
+		ctx.body = getResponse(false,'cententNotFinash')
 		return;
 	}
 
@@ -24,19 +13,13 @@ const addCategory = async (ctx,next)=>{
 	await M.category.find({category:ctx.request.body.category},function(err, obj){
 		if(err){
 			log('查询分类时错误')
-			ctx.body = {
-				status:'error',
-				msg:'查询分类时错误',
-			}
+			ctx.body = getResponse(false,'dbError')
 			ctx.notAllowAddCategory = true;
 			return;
 		}
 		if(obj.length !== 0){
 			log('分类已经存在')
-			ctx.body = {
-				status:'error',
-				msg:'分类已经存在',
-			}
+			ctx.body = getResponse(false,'categoryExist')
 			ctx.notAllowAddCategory = true;
 			return;
 		}
@@ -46,21 +29,18 @@ const addCategory = async (ctx,next)=>{
 	}
 
 	// 如果分类不存在，创建分类
-	await M.category.create({category:ctx.request.body.category.toString()})
+	await M.category.create({
+		category:ctx.request.body.category.toString(),
+		author:ctx.session.name
+	})
 	.then((obj)=>{
 		log('分类添加成功')
-		ctx.body = {
-			status:'success',
-			msg:'分类添加成功',
-		}
+		ctx.body = getResponse(true)
 		return;
 	},(err)=>{
 		if(err){
 			log('分类添加时报错')
-			ctx.body = {
-				status:'error',
-				msg:'分类添加时报错',
-			}
+			ctx.body = getResponse(false,'dbError')
 		}
 	})
 
@@ -70,31 +50,21 @@ const addCategory = async (ctx,next)=>{
 
 
 const findCategory = async (ctx,next)=>{
+	let body = ctx.request.body;
+	let where = {}
 
-	// if(!ctx.session.name) {
-	// 	ctx.body = {
-	// 		status:'userNotLogin',
-	// 		msg:'用户未登录',
-	// 	}
-	// 	return;
-	// }
-
-	await M.category.find({},(err, obj)=>{
+	if(body.type = 'dashboard'){
+		where.author = ctx.session.name;
+	}
+	await M.category.find(where,(err, obj)=>{
 		if(err){
 			log('查询分类时出错')
-			ctx.body = {
-				status:'error',
-				msg:'查询分类时出错',
-			}
+			ctx.body = getResponse(false,'dbError')
 			return;
 		}
 
 		log('分类查询成功')
-		ctx.body = {
-			status:'success',
-			data:obj,
-			msg:'分类查询成功',
-		}
+		ctx.body = getResponse(true, obj)
 		return;
 	})
 	return;
@@ -102,29 +72,15 @@ const findCategory = async (ctx,next)=>{
 
 const removeCategory = async (ctx,next)=>{
 
-	if(!ctx.session.name) {
-		ctx.body = {
-			status:'userNotLogin',
-			msg:'用户未登录',
-		}
-		return;
-	}
-
 	await M.category.remove({category:ctx.request.body.category},(err, obj)=>{
 		if(err){
 			log('未找到该分类')
-			ctx.body = {
-				status:'error',
-				msg:'未找到该分类',
-			}
+			ctx.body = getResponse(false, 'dbError')
 			return;
 		}
 
 		log('分类删除成功')
-		ctx.body = {
-			status:'success',
-			msg:'分类删除成功',
-		}
+		ctx.body = getResponse(true)
 		return;
 	})
 	return;

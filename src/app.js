@@ -11,8 +11,7 @@ import views from 'koa-views'
 
 import models from './models';
 import config from './config';
-import routes from './routes';
-import util from './lib/util'
+import router from './routes';
 
 
 const app = new Koa();
@@ -27,12 +26,10 @@ const app = new Koa();
      * G全局动态变量
      * R全局请求
      */
-
     global.C = {}; //C for config
     global.M = {}; //M for db model
     global.F = {}; //F for function
     global.G = {};
-    global.U = {}; //U for util
     global.log = function(data){console.log(data)}
 
 
@@ -44,9 +41,6 @@ const app = new Koa();
 global.C = config(path.resolve(__dirname))
 
 
-
-//===================获取工具类
-global.U = util;
 
 
 
@@ -62,7 +56,9 @@ app.use(views(__dirname + '/views', {
 
 
 //===================初始化静态资源
-app.use(serve('static'));
+app.use(serve(__dirname + '/static')); 
+
+
 
 
 
@@ -74,15 +70,15 @@ app.use(session({
     url:C.db
   }),
   // 设置cookie和session保存时间,如果不设置，那么cookie maxAge = 0，session = 一天
-  // cookie: ctx => ({
-  //   maxAge: 24 * 60 * 60 * 1000
-  // })
+  cookie: ctx => ({
+    maxAge: 60 * 60 * 1000
+  })
 }));
 
 
 
 //===================初始化model
-models()
+global.M = models()
 
 
 
@@ -92,17 +88,18 @@ app.use(bodyParer())
 
 
 //===================设置允许跨域
-app.use(cors({
-    // 设置允许传递cookie
-    credentials:true
-}))
+// app.use(cors({
+//     // 设置允许传递cookie
+//     credentials:true
+// }))
 
 
 
 //===================初始化router
-routes(app)
+app.use(router.routes());
 
-log('222222222')
+log('start complete')
+
 
 
 

@@ -1,12 +1,9 @@
-
+import { getResponse } from '../helpers'
 // 登录
 const signin = async (ctx,next)=>{
 	if(!ctx.request.body.name || !ctx.request.body.pwd){
 		log('用户名或密码不正确')
-		ctx.body = {
-			status:'error',
-			msg:'用户名或密码不正确',
-		}
+		ctx.body = getResponse(false,'authError');
 		return;
 	}
 
@@ -15,13 +12,7 @@ const signin = async (ctx,next)=>{
 	.then((obj)=>{
 		if(obj.length !== 0){
 			log('用户登录成功')
-			ctx.body = {
-				status:'success',
-				msg:'登录成功',
-				data:{
-					name:ctx.request.body.name,
-				},
-			}
+			ctx.body = getResponse(true,{name:ctx.request.body.name});
 			ctx.session = {
 				name:ctx.request.body.name,
 				pwd:ctx.request.body.pwd,
@@ -29,33 +20,38 @@ const signin = async (ctx,next)=>{
 			}
 		}else{
 			log('用户名或密码不正确')
-			ctx.body = {
-				status:'error',
-				msg:'用户名或密码不正确',
-			}
+			ctx.body = getResponse(false,'authError');
 		}
 		return
 	},(err)=>{
 		log(err)
-		ctx.body = {
-			status:'error',
-			msg:'服务器错误',
-		}
+		ctx.body = getResponse(false,'dbError');
 		return
 	})
+}
+
+// 获取用户名
+const getName = async (ctx,next)=>{
+	if(ctx.session.status === 'hasLogin'){
+		ctx.body = getResponse(true,{name:ctx.session.name});
+	}else{
+		ctx.body = getResponse(false,'userNotLogin');
+	}
+}
+
+// 退出登录
+const signout = async (ctx,next)=>{
+	ctx.session = null;
+	ctx.body = getResponse(false,'userNotLogin');
 }
 
 // 注册
 const signup = async (ctx,next)=>{
 
-
 	// 用户名或密码不存在时报错
 	if(!ctx.request.body.name || !ctx.request.body.pwd) {
 		log('用户不存在')
-		ctx.body = {
-			status:'error',
-			msg:'用户名或密码未输入',
-		}
+		ctx.body = getResponse(false,'inputNull');
 		return;
 	}
 
@@ -63,19 +59,13 @@ const signup = async (ctx,next)=>{
 	await M.user.find({name:ctx.request.body.name},function(err, obj){
 		if(err){
 			log('注册检查用户名时出错')
-			ctx.body = {
-				status:'error',
-				msg:'注册检查用户名时出错',
-			}
+			ctx.body = getResponse(false,'dbError');
 			ctx.notAllowRegister = true;
 			return;
 		}
 		if(obj.length !== 0){
 			log('用户已存在')
-			ctx.body = {
-				status:'error',
-				msg:'用户已存在',
-			}
+			ctx.body = getResponse(false,'userExist');
 			ctx.notAllowRegister = true;
 			return;
 		}
@@ -91,10 +81,7 @@ const signup = async (ctx,next)=>{
 	await M.user.create({name:ctx.request.body.name.toString(),pwd:ctx.request.body.pwd.toString()})
 	.then((obj)=>{
 		log('用户注册成功')
-		ctx.body = {
-			status:'success',
-			msg:'注册成功',
-		}
+		ctx.body = getResponse(true);
 		ctx.session = {
 			name:ctx.request.body.name,
 			pwd:ctx.request.body.pwd,
@@ -104,17 +91,27 @@ const signup = async (ctx,next)=>{
 	},(err)=>{
 		if(err){
 			log('用户注册时报错')
-			ctx.body = {
-				status:'error',
-				msg:'用户注册时报错',
-			}
+			ctx.body = getResponse(false,'registerFail');
 		}
 	})
 
 	return;
 }
 
+// 检查session是否生效
+const checklogin = async (ctx,next)=>{
+	if(ctx.session.status === 'hasLogin'){
+		await next();
+	}else{
+		ctx.body = getResponse(false,'userNotLogin');
+		// return;
+	}
+}
+
 export default {
+	getName,
 	signup,
-	signin
+	signin,
+	signout,
+	checklogin
 }
